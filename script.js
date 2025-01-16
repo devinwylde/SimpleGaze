@@ -188,25 +188,36 @@ function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
     ctx.fillRect(mouthBB.x * width, mouthBB.y * height, mouthBB.w * width, mouthBB.h * height);
     ctx.fillRect(mouthBBL.x * width, mouthBB.y * height, mouthBBL.w * width, mouthBBL.h * height);
     ctx.fillRect(mouthBBR.x * width, mouthBB.y * height, mouthBBR.w * width, mouthBBR.h * height);
+
+    postShapes({
+      mouthLeft: {x: mouthBBL.x, y: mouthBB.y, w: mouthBBL.w, h: mouthBBL.h},
+      mouthRight: {x: mouthBBR.x, y: mouthBB.y, w: mouthBBR.w, h: mouthBBR.h},
+      mouthCenter: mouthBB,
+      leftEyebrow: leftEyebrowBB,
+      rightEyebrow: rightEyebrowBB,
+      leftEye: leftEyeBB,
+      rightEye: rightEyeBB,
+      leftIris: {x: leftIrisCenterX, y: leftIrisCenterY, w: irisWidth, h: leftIrisHeight},
+      rightIris: {x: rightIrisCenterX, y: rightIrisCenterY, w: irisWidth, h: rightIrisHeight},
+    });
   } else {
     // const mouthBB = getBoundingBox(landmarks, [78, 82, 13, 312, 87, 14, 317, 308]);
     ctx.fillRect(mouthBB.x * width, mouthBB.y * height, mouthBB.w * width, mouthBB.h * height);
     ctx.fillRect(mouthBBL.x * width, mouthBB.y * height, mouthBBL.w * width, mouthBB.h * height);
     ctx.fillRect(mouthBBR.x * width, mouthBB.y * height, mouthBBR.w * width, mouthBB.h * height);
+
+    postShapes({
+      mouthLeft: {x: mouthBBL.x, y: mouthBB.y, w: mouthBBL.w, h: mouthBB.h},
+      mouthRight: {x: mouthBBR.x, y: mouthBB.y, w: mouthBBR.w, h: mouthBB.h},
+      mouthCenter: mouthBB,
+      leftEyebrow: leftEyebrowBB,
+      rightEyebrow: rightEyebrowBB,
+      leftEye: leftEyeBB,
+      rightEye: rightEyeBB,
+      leftIris: {x: leftIrisCenterX, y: leftIrisCenterY, w: irisWidth, h: leftIrisHeight},
+      rightIris: {x: rightIrisCenterX, y: rightIrisCenterY, w: irisWidth, h: rightIrisHeight},
+    });
   }
-
-
-  postShapes({
-    mouthLeft: mouthBBL,
-    mouthRight: mouthBBR,
-    mouthCenter: mouthBB,
-    leftEyebrow: leftEyebrowBB,
-    rightEyebrow: rightEyebrowBB,
-    leftEye: leftEyeBB,
-    rightEye: rightEyeBB,
-    leftIris: {x: leftIrisCenterX, y: leftIrisCenterY, w: irisWidth, h: leftIrisHeight},
-    rightIris: {x: rightIrisCenterX, y: rightIrisCenterY, w: irisWidth, h: rightIrisHeight},
-  });
 }
 
 let paused = false
