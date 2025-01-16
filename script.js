@@ -149,22 +149,36 @@ function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
   blendShapes[0].categories.map(shape => {
     bs[shape.displayName || shape.categoryName] = +shape.score;
   });
-  const leftEyeBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE);
-  const rightEyeBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE);
+  const eyeVerticalStretch = 6;
+  const eyeHorizontalStretch = 1.5;
+  const eyeHCut = 0.1;
+  const eyeY = 0.48;
+  const eyebrowStartY = eyeY + 0.4;
+  const mouthY = 0.69;
+  const eyebrowHeight = 0.06;
+  const eyebrowExaggeration = 2;
+  const irisHeightCutoffMulti = 2.2;
+
+  const leftEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE);
+  const leftEyeBB = {x: landmarks[1].x - 0.12 - (leftEyeRawBB.w * 1.5 / 2), y: eyeY, w: leftEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0)};
+  const rightEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE);
+  const rightEyeBB = {x: landmarks[1].x + 0.12 - (rightEyeRawBB.w * 1.5 / 2), y: eyeY, w: rightEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0)};
   const lebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW);
   const rebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW);
-  const leftEyebrowBB = {x: leftEyeBB.x, y: lebb.y + lebb.h / 2, w: leftEyeBB.w, h: 0.02};
-  const rightEyebrowBB = {x: rightEyeBB.x, y: rebb.y + rebb.h / 2, w: rightEyeBB.w, h: 0.02};
+  const leftEyebrowBB = {x: leftEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((lebb.y + lebb.h / 2) - leftEyeBB.y), w: leftEyeBB.w, h: eyebrowHeight};
+  const rightEyebrowBB = {x: rightEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((rebb.y + rebb.h / 2) - rightEyeBB.y), w: rightEyeBB.w, h: eyebrowHeight};
 
   const percentTurnedX = Math.max(Math.min(cast.rotation.yaw / 200, 0.5), -0.5) + 0.5;
   const irisMovedLeft = percentTurnedX + 0.2*(bs.eyeLookInLeft - bs.eyeLookOutLeft);
   const irisMovedRight = percentTurnedX + 0.2*(bs.eyeLookOutRight - bs.eyeLookInRight);
 
-  const irisWidth = 0.05;
-  const leftIrisHeight = Math.min(irisWidth, leftEyeBB.h * 1.1);
+  const irisWidth = 0.07;
+  // const leftIrisHeight = Math.min(irisWidth * , leftEyeBB.h * 1.1);
+  const leftIrisHeight = Math.min(irisWidth * irisHeightCutoffMulti, leftEyeBB.h * 0.98);
   const leftIrisCenterX = leftEyeBB.x + (leftEyeBB.w * irisMovedLeft) - irisWidth/2;
   const leftIrisCenterY = leftEyeBB.y + leftEyeBB.h/2 - leftIrisHeight/2;
-  const rightIrisHeight = Math.min(irisWidth, rightEyeBB.h * 1.1);
+  // const rightIrisHeight = Math.min(irisWidth, rightEyeBB.h * 1.1);
+  const rightIrisHeight = Math.min(irisWidth * irisHeightCutoffMulti, rightEyeBB.h * 0.98);
   const rightIrisCenterX = rightEyeBB.x + (rightEyeBB.w * irisMovedRight) - irisWidth/2;
   const rightIrisCenterY = rightEyeBB.y + rightEyeBB.h/2 - rightIrisHeight/2;
 
@@ -180,7 +194,8 @@ function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
   ctx.fillRect(leftIrisCenterX * width, leftIrisCenterY * height, irisWidth * width, leftIrisHeight * height);
   ctx.fillRect(rightIrisCenterX * width, rightIrisCenterY * height, irisWidth * width, rightIrisHeight * height);
 
-  const mouthBB = getBoundingBox(landmarks, [80, 88, 82, 13, 312, 87, 14, 317, 310, 318]);
+  const mouthRawBB = getBoundingBox(landmarks, [80, 88, 82, 13, 312, 87, 14, 317, 310, 318]);
+  const mouthBB = {x: mouthRawBB.x, y: mouthY, w: mouthRawBB.w, h: mouthRawBB.h};
   const mouthBBL = getBoundingBox(landmarks, [80, 88, 78]);
   const mouthBBR = getBoundingBox(landmarks, [310, 318, 308]);
 
