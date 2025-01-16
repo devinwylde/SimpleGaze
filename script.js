@@ -247,7 +247,7 @@ function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
   const leftEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, '#F9FFFE');
   const leftEyeBB = {x: landmarks[1].x - 0.12 - (leftEyeRawBB.w * eyeHorizontalStretch / 2), y: eyeY, w: leftEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0), color: leftEyeRawBB.color};
   const rightEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, '#F9FFFE');
-  const rightEyeBB = {x: landmarks[1].x + 0.12 - (rightEyeRawBB.w * eyeHorizontalStretch / 2), y: eyeY, w: rightEyeRawBB.w * eyeHorizontalStretch, h: Math.max((rightEyeBB.h * eyeVerticalStretch) - eyeHCut, 0), color: rightEyeRawBB.color};
+  const rightEyeBB = {x: landmarks[1].x + 0.12 - (rightEyeRawBB.w * eyeHorizontalStretch / 2), y: eyeY, w: rightEyeRawBB.w * eyeHorizontalStretch, h: Math.max((rightEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0), color: rightEyeRawBB.color};
   const lebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW, eyebrowColor);
   const rebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW, eyebrowColor);
   const leftEyebrowBB = {x: leftEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((lebb.y + lebb.h / 2) - leftEyeRawBB.y), w: leftEyeBB.w, h: eyebrowHeight, color: lebb.color};
