@@ -209,8 +209,10 @@ function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
   });
 }
 
+let paused = false
 
 function postShapes(res) {
+  if (currentRef === 'Name' || paused) return;
   const dbRef = ref(database, currentRef);
   update(dbRef, res);
 }
@@ -447,7 +449,6 @@ function alignFaceToCamera(vertices, tipIndex, baseIndex, leftEyeIndex, rightEye
 
 let lastVideoTime = -1
 let results = undefined
-let paused = false
 const drawingUtils = new DrawingUtils(canvasCtx)
 async function predictWebcam() {
   const radio = video.videoHeight / video.videoWidth
