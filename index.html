@@ -127,13 +127,114 @@ limitations under the License. -->
   <section id="demos">
     <div id="liveView" class="videoView">
       <video id="webcam" autoplay playsinline></video>
-      <canvas class="output_canvas invisible" id="output_canvas"></canvas>
       <canvas class="mesh_canvas invisible" id="mesh_canvas"></canvas>
+      <canvas class="output_canvas invisible" id="output_canvas"></canvas>
       <img id="pause-play-button" src="https://i.gifer.com/ZKZg.gif" alt="Loading" />
       <div id="refTextbox-container">
-        <label for="refTextbox">Enter Username:</label>
-        <input type="text" id="refTextbox" placeholder="Minecraft Username">
+        <label for="refTextbox">Enter UUID:</label>
+        <input type="text" id="refTextbox" placeholder="Minecraft Player UUID">
     </div>
+    </div>
+    <div id="controls">
+      <h2 style="color: white; text-align: center;">Controls</h2>
+      <div>
+        <label for="eyeVerticalStretch">Eye Vertical Stretch:</label>
+        <input type="range" id="eyeVerticalStretch" min="3" max="10" step="0.1" value="6">
+      </div>
+      <div>
+        <label for="eyeHorizontalStretch">Eye Horizontal Stretch:</label>
+        <input type="range" id="eyeHorizontalStretch" min="0.5" max="2.5" step="0.1" value="1.5">
+      </div>
+      <div>
+        <label for="eyeY">Eye Position:</label>
+        <input type="range" id="eyeY" min="0.2" max="0.7" step="0.01" value="0.48">
+      </div>
+      <div>
+        <label for="eyebrowHeight">Eyebrow Height:</label>
+        <input type="range" id="eyebrowHeight" min="0.02" max="0.1" step="0.01" value="0.06">
+      </div>
+      <div>
+        <label for="eyebrowStartY">Eyebrow Position:</label>
+        <input type="range" id="eyebrowStartY" min="-0.05" max="0.3" step="0.01" value="0">
+      </div>
+      <div>
+        <label for="mouthY">Mouth Position:</label>
+        <input type="range" id="mouthY" min="0.6" max="0.8" step="0.01" value="0.69">
+      </div>
+      <div>
+        <label for="enableEyes">White Around Eyes:</label>
+        <input type="checkbox" id="enableEyes" checked>
+      </div>
+      <div>
+        <label for="enableEyebrows">Visible Eyebrows:</label>
+        <input type="checkbox" id="enableEyebrows" checked>
+      </div>
+      <div>
+        <label for="irisColor">Iris Color:</label>
+        <select id="irisColor">
+          <option value="#1D1D21">Black</option>
+          <option value="#F9FFFE">White</option>
+          <option value="#F9801D">Orange</option>
+          <option value="#C74EBD">Magenta</option>
+          <option value="#3AB3DA">Light Blue</option>
+          <option value="#FED83D">Yellow</option>
+          <option value="#80C71F">Lime</option>
+          <option value="#F38BAA">Pink</option>
+          <option value="#474F52">Gray</option>
+          <option value="#9D9D97">Light Gray</option>
+          <option value="#169C9C">Cyan</option>
+          <option value="#8932B8">Purple</option>
+          <option value="#3C44AA">Blue</option>
+          <option value="#835432">Brown</option>
+          <option value="#5E7C16">Green</option>
+          <option value="#B02E26">Red</option>
+        </select>
+      </div>
+      <div>
+        <label for="eyebrowColor">Eyebrow Color:</label>
+        <select id="eyebrowColor">
+          <option value="#1D1D21">Black</option>
+          <option value="#F9FFFE">White</option>
+          <option value="#F9801D">Orange</option>
+          <option value="#C74EBD">Magenta</option>
+          <option value="#3AB3DA">Light Blue</option>
+          <option value="#FED83D">Yellow</option>
+          <option value="#80C71F">Lime</option>
+          <option value="#F38BAA">Pink</option>
+          <option value="#474F52">Gray</option>
+          <option value="#9D9D97">Light Gray</option>
+          <option value="#169C9C">Cyan</option>
+          <option value="#8932B8">Purple</option>
+          <option value="#3C44AA">Blue</option>
+          <option value="#835432">Brown</option>
+          <option value="#5E7C16">Green</option>
+          <option value="#B02E26">Red</option>
+        </select>
+      </div>
+      <div>
+        <label for="mouthColor">Mouth Color:</label>
+        <select id="mouthColor">
+          <option value="#1D1D21">Black</option>
+          <option value="#B02E26">Red</option>
+          <option value="#F9FFFE">White</option>
+          <option value="#F9801D">Orange</option>
+          <option value="#C74EBD">Magenta</option>
+          <option value="#3AB3DA">Light Blue</option>
+          <option value="#FED83D">Yellow</option>
+          <option value="#80C71F">Lime</option>
+          <option value="#F38BAA">Pink</option>
+          <option value="#474F52">Gray</option>
+          <option value="#9D9D97">Light Gray</option>
+          <option value="#169C9C">Cyan</option>
+          <option value="#8932B8">Purple</option>
+          <option value="#3C44AA">Blue</option>
+          <option value="#835432">Brown</option>
+          <option value="#5E7C16">Green</option>
+        </select>
+      </div>
+        <label for="enableEyebrows">Debug:</label>
+        <input type="checkbox" id="enableDebug">
+      </div>
     </div>
   </section>
 </body>

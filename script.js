@@ -65,6 +65,7 @@ refTextbox.addEventListener("input", () => {
     const oldRef = ref(database, currentRef);
     remove(oldRef); // Remove the previous ref
     currentRef = newRef;
+    displayMinecraftFace(newRef);
   }
 });
 
@@ -115,7 +116,7 @@ function drawPixelatedLandmarks(landmarks, ctx, size, color) {
   }
 }
 
-function getBoundingBox(landmarks, indices) {
+function getBoundingBox(landmarks, indices, color) {
   let minX = Number.MAX_VALUE, minY = Number.MAX_VALUE;
   let maxX = Number.MIN_VALUE, maxY = Number.MIN_VALUE;
   for (const idx of indices) {
@@ -126,10 +127,10 @@ function getBoundingBox(landmarks, indices) {
     maxX = Math.max(maxX, x);
     maxY = Math.max(maxY, y);
   }
-  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, color: color };
 }
 
-function getBoundingBoxFromLines(landmarks, indices) {
+function getBoundingBoxFromLines(landmarks, indices, color) {
   let minX = Number.MAX_VALUE, minY = Number.MAX_VALUE;
   let maxX = Number.MIN_VALUE, maxY = Number.MIN_VALUE;
   for (const idx of indices) {
@@ -140,8 +141,78 @@ function getBoundingBoxFromLines(landmarks, indices) {
     maxX = Math.max(maxX, x);
     maxY = Math.max(maxY, y);
   }
-  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, color: color };
 }
+
+// Function to fetch Minecraft skin URL using UUID
+async function getMinecraftSkin(uuid) {
+  try {
+    const response = await fetch(`https://skinmc.net/api/v1/skins/uuid/${uuid}`);
+    console.log(response);
+    // const response = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
+    if (!response.ok) {
+      console.error(`Failed to fetch skin data for UUID: ${uuid}`);
+      return null;
+    }
+    const blob = await response.blob();
+    console.log(blob);
+    const url = URL.createObjectURL(blob);
+
+    facePng = new Image();
+    facePng.src = url;
+  } catch (error) {
+    console.error("Error fetching skin data:", error);
+    return null;
+  }
+}
+
+// Function to load the skin image and extract the face portion
+async function loadSkinFaceTexture(skinURL) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous"; // Enable CORS for third-party resources
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 8; // Face width on the skin texture
+      canvas.height = 8; // Face height on the skin texture
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 8, 8, 8, 8, 0, 0, 8, 8); // Crop the face area (x=8, y=8)
+      resolve(canvas.toDataURL("image/png")); // Return the face texture as a data URL
+    };
+    image.onerror = () => reject("Failed to load skin texture");
+    image.src = skinURL; // Set the image source to the skin URL
+  });
+}
+
+let facePng;
+// Function to display the face texture behind the drawn face
+async function displayMinecraftFace(username) {
+  // const uuid = await getMinecraftUUID(username);
+  // if (!uuid) return;
+
+  await getMinecraftSkin(username);
+
+  // const skinURL = await getMinecraftSkinURL(username);
+  // if (!skinURL) return;
+
+  // const faceTextureURL = await loadSkinFaceTexture(skinURL);
+  // facePng = new Image();
+  // facePng.src = faceTextureURL;
+}
+
+const eyeVerticalStretchInput = document.getElementById("eyeVerticalStretch");
+const eyeHorizontalStretchInput = document.getElementById("eyeHorizontalStretch");
+const eyeYInput = document.getElementById("eyeY");
+const eyebrowStartYInput = document.getElementById("eyebrowStartY");
+const mouthYInput = document.getElementById("mouthY");
+const eyebrowHeightInput = document.getElementById("eyebrowHeight");
+const enableEyesInput = document.getElementById("enableEyes");
+const enableEyebrowsInput = document.getElementById("enableEyebrows");
+const enableDebugInput = document.getElementById("enableDebug");
+const irisColorInput = document.getElementById("irisColor");
+const eyebrowColorInput = document.getElementById("eyebrowColor");
+const mouthColorInput = document.getElementById("mouthColor");
+
 
 function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
   const landmarks = cast.landmarks;
@@ -149,90 +220,117 @@ function drawMinecraftLandmarks(cast, blendShapes, ctx, width, height) {
   blendShapes[0].categories.map(shape => {
     bs[shape.displayName || shape.categoryName] = +shape.score;
   });
-  const eyeVerticalStretch = 6;
-  const eyeHorizontalStretch = 1.5;
+
+  const eyeVerticalStretch = parseFloat(eyeVerticalStretchInput.value);
+  const eyeHorizontalStretch = parseFloat(eyeHorizontalStretchInput.value);
+  const eyeY = parseFloat(eyeYInput.value);
+  const eyebrowStartY = eyeY - parseFloat(eyebrowStartYInput.value);
+  const mouthY = parseFloat(mouthYInput.value);
+  const eyebrowHeight = parseFloat(eyebrowHeightInput.value);
+  const irisColor = irisColorInput.value;
+  const eyebrowColor = eyebrowColorInput.value;
+  const mouthColor = mouthColorInput.value;
+  const drawEyes = enableEyesInput.checked;
+  const drawEyebrows = enableEyebrowsInput.checked;
+
+  // const eyeVerticalStretch = 6;
+  // const eyeHorizontalStretch = 1.5;
   const eyeHCut = 0.1;
-  const eyeY = 0.48;
-  const eyebrowStartY = eyeY + 0.4;
-  const mouthY = 0.69;
-  const eyebrowHeight = 0.06;
+  // const eyeY = 0.48;
+  // const eyebrowStartY = eyeY + 0.4;
+  // const mouthY = 0.69;
+  // const eyebrowHeight = 0.06;
   const eyebrowExaggeration = 2;
   const irisHeightCutoffMulti = 2.2;
+  const irisWidth = eyeHorizontalStretch * 7/150;
 
-  const leftEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE);
-  const leftEyeBB = {x: landmarks[1].x - 0.12 - (leftEyeRawBB.w * 1.5 / 2), y: eyeY, w: leftEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0)};
-  const rightEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE);
-  const rightEyeBB = {x: landmarks[1].x + 0.12 - (rightEyeRawBB.w * 1.5 / 2), y: eyeY, w: rightEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0)};
-  const lebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW);
-  const rebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW);
-  const leftEyebrowBB = {x: leftEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((lebb.y + lebb.h / 2) - leftEyeBB.y), w: leftEyeBB.w, h: eyebrowHeight};
-  const rightEyebrowBB = {x: rightEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((rebb.y + rebb.h / 2) - rightEyeBB.y), w: rightEyeBB.w, h: eyebrowHeight};
+  const leftEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE, '#F9FFFE');
+  const leftEyeBB = {x: landmarks[1].x - 0.12 - (leftEyeRawBB.w * eyeHorizontalStretch / 2), y: eyeY, w: leftEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0), color: leftEyeRawBB.color};
+  const rightEyeRawBB = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE, '#F9FFFE');
+  const rightEyeBB = {x: landmarks[1].x + 0.12 - (rightEyeRawBB.w * eyeHorizontalStretch / 2), y: eyeY, w: rightEyeRawBB.w * eyeHorizontalStretch, h: Math.max((leftEyeRawBB.h * eyeVerticalStretch) - eyeHCut, 0), color: rightEyeRawBB.color};
+  const lebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW, eyebrowColor);
+  const rebb = getBoundingBoxFromLines(landmarks, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW, eyebrowColor);
+  const leftEyebrowBB = {x: leftEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((lebb.y + lebb.h / 2) - leftEyeRawBB.y), w: leftEyeBB.w, h: eyebrowHeight, color: lebb.color};
+  const rightEyebrowBB = {x: rightEyeBB.x, y: eyebrowStartY + eyebrowExaggeration * ((rebb.y + rebb.h / 2) - rightEyeRawBB.y), w: rightEyeBB.w, h: eyebrowHeight, color: rebb.color};
 
   const percentTurnedX = Math.max(Math.min(cast.rotation.yaw / 200, 0.5), -0.5) + 0.5;
   const irisMovedLeft = percentTurnedX + 0.2*(bs.eyeLookInLeft - bs.eyeLookOutLeft);
   const irisMovedRight = percentTurnedX + 0.2*(bs.eyeLookOutRight - bs.eyeLookInRight);
 
-  const irisWidth = 0.07;
   // const leftIrisHeight = Math.min(irisWidth * , leftEyeBB.h * 1.1);
-  const leftIrisHeight = Math.min(irisWidth * irisHeightCutoffMulti, leftEyeBB.h * 0.98);
+  const leftIrisHeight = Math.min(eyeVerticalStretch/80 * irisHeightCutoffMulti, leftEyeBB.h * 0.98);
   const leftIrisCenterX = leftEyeBB.x + (leftEyeBB.w * irisMovedLeft) - irisWidth/2;
   const leftIrisCenterY = leftEyeBB.y + leftEyeBB.h/2 - leftIrisHeight/2;
   // const rightIrisHeight = Math.min(irisWidth, rightEyeBB.h * 1.1);
-  const rightIrisHeight = Math.min(irisWidth * irisHeightCutoffMulti, rightEyeBB.h * 0.98);
+  const rightIrisHeight = Math.min(eyeVerticalStretch/80 * irisHeightCutoffMulti, rightEyeBB.h * 0.98);
   const rightIrisCenterX = rightEyeBB.x + (rightEyeBB.w * irisMovedRight) - irisWidth/2;
   const rightIrisCenterY = rightEyeBB.y + rightEyeBB.h/2 - rightIrisHeight/2;
 
   ctx.fillStyle = '#b6dcf0';
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = 'white';
-  ctx.fillRect(leftEyeBB.x * width, leftEyeBB.y * height, leftEyeBB.w * width, leftEyeBB.h * height);
-  ctx.fillRect(rightEyeBB.x * width, rightEyeBB.y * height, rightEyeBB.w * width, rightEyeBB.h * height);
-  ctx.fillStyle = 'brown';
-  ctx.fillRect(leftEyebrowBB.x * width, leftEyebrowBB.y * height, leftEyebrowBB.w * width, leftEyebrowBB.h * height);
-  ctx.fillRect(rightEyebrowBB.x * width, rightEyebrowBB.y * height, rightEyebrowBB.w * width, rightEyebrowBB.h * height);
-  ctx.fillStyle = 'black';
+
+  if (currentRef !== 'Name' && facePng) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(facePng, 8, 8, 8, 8, width * 1/4, height * 1/8, Math.min(width, height) * 2/3, Math.min(width, height) * 2/3);
+  }
+
+  if (drawEyebrows) {
+    ctx.fillStyle = eyebrowColor;
+    ctx.fillRect(leftEyebrowBB.x * width, leftEyebrowBB.y * height, leftEyebrowBB.w * width, leftEyebrowBB.h * height);
+    ctx.fillRect(rightEyebrowBB.x * width, rightEyebrowBB.y * height, rightEyebrowBB.w * width, rightEyebrowBB.h * height);
+  }
+
+  if (drawEyes) {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(leftEyeBB.x * width, leftEyeBB.y * height, leftEyeBB.w * width, leftEyeBB.h * height);
+    ctx.fillRect(rightEyeBB.x * width, rightEyeBB.y * height, rightEyeBB.w * width, rightEyeBB.h * height);
+  }
+  
+  ctx.fillStyle = irisColor;
   ctx.fillRect(leftIrisCenterX * width, leftIrisCenterY * height, irisWidth * width, leftIrisHeight * height);
   ctx.fillRect(rightIrisCenterX * width, rightIrisCenterY * height, irisWidth * width, rightIrisHeight * height);
 
-  const mouthRawBB = getBoundingBox(landmarks, [80, 88, 82, 13, 312, 87, 14, 317, 310, 318]);
-  const mouthBB = {x: mouthRawBB.x, y: mouthY, w: mouthRawBB.w, h: mouthRawBB.h};
-  const mouthBBL = getBoundingBox(landmarks, [80, 88, 78]);
-  const mouthBBR = getBoundingBox(landmarks, [310, 318, 308]);
+  const mouthRawBB = getBoundingBox(landmarks, [80, 88, 82, 13, 312, 87, 14, 317, 310, 318], mouthColor);
+  const mouthBB = {x: mouthRawBB.x, y: mouthY, w: mouthRawBB.w, h: mouthRawBB.h, color: mouthRawBB.color};
+  const mouthBBL = getBoundingBox(landmarks, [80, 88, 78], mouthColor);
+  const mouthBBR = getBoundingBox(landmarks, [310, 318, 308], mouthColor);
 
+  ctx.fillStyle = mouthColor;
+  const post = {leftIris: {x: leftIrisCenterX, y: leftIrisCenterY, w: irisWidth, h: leftIrisHeight, color: irisColor},
+      rightIris: {x: rightIrisCenterX, y: rightIrisCenterY, w: irisWidth, h: rightIrisHeight, color: irisColor},
+      mouthCenter: mouthBB};
+  if (drawEyes) {
+    post['leftEye'] = leftEyeBB;
+    post['rightEye'] = rightEyeBB;
+  } else {
+    post['leftEye'] = null;
+    post['rightEye'] = null;
+  }
+  if (drawEyebrows) {
+    post['leftEyebrow'] = leftEyebrowBB;
+    post['rightEyebrow'] = rightEyebrowBB;
+  } else {
+    post['leftEyebrow'] = null;
+    post['rightEyebrow'] = null;
+  }
   if (bs.mouthSmileLeft > 0.5 || bs.mouthSmileRight > 0.5) {
     ctx.fillRect(mouthBB.x * width, mouthBB.y * height, mouthBB.w * width, mouthBB.h * height);
     ctx.fillRect(mouthBBL.x * width, mouthBB.y * height, mouthBBL.w * width, mouthBBL.h * height);
     ctx.fillRect(mouthBBR.x * width, mouthBB.y * height, mouthBBR.w * width, mouthBBR.h * height);
 
-    postShapes({
-      mouthLeft: {x: mouthBBL.x, y: mouthBB.y, w: mouthBBL.w, h: mouthBBL.h},
-      mouthRight: {x: mouthBBR.x, y: mouthBB.y, w: mouthBBR.w, h: mouthBBR.h},
-      mouthCenter: mouthBB,
-      leftEyebrow: leftEyebrowBB,
-      rightEyebrow: rightEyebrowBB,
-      leftEye: leftEyeBB,
-      rightEye: rightEyeBB,
-      leftIris: {x: leftIrisCenterX, y: leftIrisCenterY, w: irisWidth, h: leftIrisHeight},
-      rightIris: {x: rightIrisCenterX, y: rightIrisCenterY, w: irisWidth, h: rightIrisHeight},
-    });
+    post['mouthLeft'] = {x: mouthBBL.x, y: mouthBB.y, w: mouthBBL.w, h: mouthBBL.h, color: mouthBB.color};
+    post['mouthRight'] = {x: mouthBBR.x, y: mouthBB.y, w: mouthBBR.w, h: mouthBBR.h, color: mouthBB.color};
   } else {
     // const mouthBB = getBoundingBox(landmarks, [78, 82, 13, 312, 87, 14, 317, 308]);
     ctx.fillRect(mouthBB.x * width, mouthBB.y * height, mouthBB.w * width, mouthBB.h * height);
     ctx.fillRect(mouthBBL.x * width, mouthBB.y * height, mouthBBL.w * width, mouthBB.h * height);
     ctx.fillRect(mouthBBR.x * width, mouthBB.y * height, mouthBBR.w * width, mouthBB.h * height);
 
-    postShapes({
-      mouthLeft: {x: mouthBBL.x, y: mouthBB.y, w: mouthBBL.w, h: mouthBB.h},
-      mouthRight: {x: mouthBBR.x, y: mouthBB.y, w: mouthBBR.w, h: mouthBB.h},
-      mouthCenter: mouthBB,
-      leftEyebrow: leftEyebrowBB,
-      rightEyebrow: rightEyebrowBB,
-      leftEye: leftEyeBB,
-      rightEye: rightEyeBB,
-      leftIris: {x: leftIrisCenterX, y: leftIrisCenterY, w: irisWidth, h: leftIrisHeight},
-      rightIris: {x: rightIrisCenterX, y: rightIrisCenterY, w: irisWidth, h: rightIrisHeight},
-    });
+    post['mouthLeft'] = {x: mouthBBL.x, y: mouthBB.y, w: mouthBBL.w, h: mouthBB.h, color: mouthBB.color};
+    post['mouthRight'] = {x: mouthBBR.x, y: mouthBB.y, w: mouthBBR.w, h: mouthBB.h, color: mouthBB.color};
   }
+
+  postShapes(post);
 }
 
 let paused = false
@@ -504,7 +602,7 @@ async function predictWebcam() {
   
   if (results && results.faceLandmarks) {
     for (const landmarks of results.faceLandmarks) {
-      drawPixelatedLandmarks(landmarks, canvasCtx, 3, "#C0C0C0");
+      if (enableDebugInput.checked) drawPixelatedLandmarks(landmarks, canvasCtx, 3, "#C0C0C0");
       drawMinecraftLandmarks(alignFaceToCamera(landmarks, 1, 6, 226, 446), results.faceBlendshapes, udCtx, canvasElement.width, canvasElement.height);
       // drawPixelatedLandmarks(alignFaceToCamera(landmarks, 1, 6, FaceLandmarker.FACE_LANDMARKS_LEFT_EYE[0].start, FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE[0].start).landmarks, udCtx, 3, "#C0C0C0");
       
